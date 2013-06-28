@@ -7,5 +7,6 @@
                  [clj-yaml "0.4.0"]
                  [ring/ring-jetty-adapter "1.2.0-RC1"]
                  [ring/ring-json "0.2.0"]
-                 [compojure "1.1.5"]]
+                 [compojure "1.1.5"]
+                 [factual/factual-clojure-driver "1.5.1"]]
   :main store-server.core)
