@@ -11,10 +11,10 @@
   (PUT "/" [name]
     (response {"hello" name}))
 
-  (PUT "/scans" [code]
+  (POST "/scans" [code]
     (response (catalog/get-cpg (keyword code))))
 
-  (PUT "/scale-scans" [code]
+  (POST "/scale-scans" [code]
     (response (catalog/get-bulk (keyword code)))))
 
 (def app

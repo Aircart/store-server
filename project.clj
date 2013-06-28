@@ -8,5 +8,8 @@
                  [ring/ring-jetty-adapter "1.2.0-RC1"]
                  [ring/ring-json "0.2.0"]
                  [compojure "1.1.5"]
-                 [factual/factual-clojure-driver "1.5.1"]]
-  :main store-server.core)
+                 [factual/factual-clojure-driver "1.5.1"]
+                 [clj-http "0.7.3"]]
+  :main store-server.core
+  :plugins [[lein-beanstalk "0.2.7"]]
+  :ring {:handler store-server.web/app})
