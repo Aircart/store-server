@@ -14,13 +14,13 @@ FIXME: explanation
 
 ## Amazon test instance
 
-```http://```
+    http://
 
 ## Basic API Usage
 
 Note: prices are in cents
 
-Use header: ```Content-Type: application/json```
+Use header: `Content-Type: application/json`
 
     PUT /scans
     {
