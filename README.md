@@ -22,7 +22,7 @@ Note: prices are in cents
 
 Use header: `Content-Type: application/json`
 
-    PUT /scans
+    POST /scans
     {
       "code": "078742115238"
     }
@@ -33,7 +33,7 @@ Use header: `Content-Type: application/json`
       "price": 500
     }
 
-    PUT /scale-scans
+    POST /scale-scans
     {
       "code": "3000"
     }
