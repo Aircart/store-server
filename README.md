@@ -18,6 +18,8 @@ FIXME: explanation
 
 ## Basic API Usage
 
+For API doc, go to: <http://docs.aircart.apiary.io/>
+
 Note: prices are in cents
 
 Use header: `Content-Type: application/json`
@@ -46,7 +48,7 @@ Use header: `Content-Type: application/json`
 
 ## Image Processing
 
-To process images, use an image proxy, we will have our own setup soon, use this for now: <https://gist.github.com/carlo/5379498>
+To process images, use an image proxy, we will have our own setup soon, use this for now: <http://images.weserv.nl/>
 
 ## Options
 
