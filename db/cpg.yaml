@@ -6,3 +6,7 @@
   name: Great Value Basil Leaves
   image: http://i.walmartimages.com/i/p/00/07/87/42/11/0007874211523_500X500.jpg
   price: 199
+'default':
+  name: Bundaberg Ginger Beer
+  image: http://www.bundaberg.com/info_assets/gb%20wet%20375ml%20with%20btbb%20aug10.jpg
+  price: 4
