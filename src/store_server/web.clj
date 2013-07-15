@@ -4,6 +4,11 @@
         ring.util.response)
   (:require [store-server.catalogs.local :as catalog]))
 
+(defn simple-logging-middleware [appw]
+  (fn [req]
+    (println req)
+    (appw req)))
+
 (defroutes handler
   (GET "/" []
     (response {"hello" "world"}))
@@ -20,4 +25,5 @@
 (def app
   (-> handler
     wrap-json-params
-    wrap-json-response))
+    wrap-json-response
+    simple-logging-middleware))
