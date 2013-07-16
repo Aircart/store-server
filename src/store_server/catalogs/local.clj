@@ -3,9 +3,9 @@
 
 (defn get-cpg [code]
   (def data (yaml/parse-string (slurp "db/cpg.yaml")))
-  (if (contains? data code)
-    (data code)
-    (data :default)))
+  (data (if (contains? data code)
+    code
+    :default)))
 
 (defn get-bulk [code] ; TODO: dry up
   ((yaml/parse-string (slurp "db/bulk.yaml")) code))

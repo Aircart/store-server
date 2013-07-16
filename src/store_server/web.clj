@@ -2,7 +2,7 @@
   (:use compojure.core
         ring.middleware.json
         ring.util.response)
-  (:require [store-server.catalogs.local :as catalog]))
+  (:require [store-server.catalogs.factual :as catalog]))
 
 (defn simple-logging-middleware [appw]
   (fn [req]
