@@ -16,35 +16,9 @@ FIXME: explanation
 
     http://
 
-## Basic API Usage
+## Devices API Documentation
 
 For API doc, go to: <http://docs.aircart.apiary.io/>
-
-Note: prices are in cents
-
-Use header: `Content-Type: application/json`
-
-    POST /scans
-    {
-      "code": "078742115238"
-    }
-    ->
-    {
-      "name": "Pasta"
-      "image": "http://example.com/image.jpg"
-      "price": 500
-    }
-
-    POST /scale-scans
-    {
-      "code": "3000"
-    }
-    ->
-    {
-      "name": "Pasta"
-      "image": "http://example.com/image.jpg"
-      "price_per_gram": 0.1
-    }
 
 ## Image Processing
 

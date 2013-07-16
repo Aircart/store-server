@@ -11,5 +11,5 @@
                  [factual/factual-clojure-driver "1.5.1"]
                  [clj-http "0.7.3"]]
   :main store-server.core
-  :plugins [[lein-beanstalk "0.2.7"]]
-  :ring {:handler store-server.web/app})
+  :plugins [[lein-beanstalk "0.2.7"]]    ; added for AWS
+  :ring {:handler store-server.web/app}) ; added for AWS
