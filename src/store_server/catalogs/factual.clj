@@ -15,4 +15,6 @@
     (local/get-cpg :default)
     (to-aircart results)))
 
-(defn get-bulk [code] (local/get-bulk code))
+(defn read-bulk [] (local/read-bulk)) ; dry up with redefinitions?
+
+(defn get-bulk [code] (local/get-bulk code)) ; dry up with redefinitions?

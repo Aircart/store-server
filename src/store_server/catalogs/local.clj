@@ -7,5 +7,8 @@
     code
     :default)))
 
+(defn read-bulk []
+  (yaml/parse-string (slurp "db/bulk.yaml")))
+
 (defn get-bulk [code] ; TODO: dry up
-  ((yaml/parse-string (slurp "db/bulk.yaml")) code))
+  (read-bulk code))

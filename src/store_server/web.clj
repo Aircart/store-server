@@ -10,11 +10,8 @@
     (appw req)))
 
 (defroutes handler
-  (GET "/" []
-    (response {"hello" "world"}))
-
-  (PUT "/" [name]
-    (response {"hello" name}))
+  (GET "/scale-products" []
+    (response (catalog/read-bulk)))
 
   (POST "/scans" [code]
     (response (catalog/get-cpg (keyword code))))
