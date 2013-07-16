@@ -1,8 +1,48 @@
 '3001':
+  name: Fuji Apples
+  image: http://images.aircartapp.com.s3.amazonaws.com/fruits/apple.jpg
+  price_per_gram: 0.04
+'3002':
   name: Bananas
-  image: http://paulwhartonstyle.com/wp-content/uploads/2013/03/shutterstock_99478112.jpg
-  price_per_gram: 0.05
-'4000':
-  name: Pasta
-  image: http://us.123rf.com/400wm/400/400/spaxia/spaxia1106/spaxia110600001/9729510-uncooked-pasta-fusilli-in-different-colours-white-background.jpg
-  price_per_gram: 0.1
+  image: http://images.aircartapp.com.s3.amazonaws.com/fruits/bananas.jpg
+  price_per_gram: 0.04
+'3003':
+  name: Strawberries
+  image: http://images.aircartapp.com.s3.amazonaws.com/fruits/strawberries.jpg
+  price_per_gram: 0.09
+'3004':
+  name: Kiwis
+  image: http://images.aircartapp.com.s3.amazonaws.com/fruits/kiwis.jpg
+  price_per_gram: 0.08
+'3005':
+  name: Pears
+  image: http://images.aircartapp.com.s3.amazonaws.com/fruits/pear.jpg
+  price_per_gram: 0.03
+'3006':
+  name: Seasonal Cherries
+  image: http://images.aircartapp.com.s3.amazonaws.com/fruits/cherries.jpg
+  price_per_gram: 0.045
+'3007':
+  name: Lemons
+  image: http://images.aircartapp.com.s3.amazonaws.com/fruits/lemon.jpg
+  price_per_gram: 0.04
+'3008':
+  name: Oranges
+  image: http://images.aircartapp.com.s3.amazonaws.com/fruits/orange.jpg
+  price_per_gram: 0.04
+'3009':
+  name: White Grapes
+  image: http://images.aircartapp.com.s3.amazonaws.com/fruits/grape.jpg
+  price_per_gram: 0.053
+'3010':
+  name: Peaches
+  image: http://images.aircartapp.com.s3.amazonaws.com/fruits/peach.jpg
+  price_per_gram: 0.0434
+'3011':
+  name: Apricots
+  image: http://images.aircartapp.com.s3.amazonaws.com/fruits/apricots.jpg
+  price_per_gram: 0.03465
+'3012':
+  name: Pineapple
+  image: http://images.aircartapp.com.s3.amazonaws.com/fruits/pineapple.jpg
+  price_per_gram: 0.0645
