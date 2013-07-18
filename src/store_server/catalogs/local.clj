@@ -11,4 +11,4 @@
   (yaml/parse-string (slurp "db/bulk.yaml")))
 
 (defn get-bulk [code] ; TODO: dry up
-  (read-bulk code))
+  ((read-bulk) code))
