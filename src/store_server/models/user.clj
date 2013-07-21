@@ -6,6 +6,11 @@
     (if-not (nil? user) (String. user)))
     (db/get db-descriptor (.getBytes (str "user_" user-id)))))
 
+(defn fetch-token [db-descriptor facebook-token]
+  ((fn [token]
+    (if-not (nil? token) (String. token)))
+    (db/get db-descriptor (.getBytes (str "user_token_" facebook-token)))))
+
 (defn save [db-descriptor facebook-fields facebook-token]
   (with-open [db-batch (db/create-write-batch db-descriptor)]
     ;; save user fields

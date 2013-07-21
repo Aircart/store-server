@@ -1,7 +1,8 @@
 (ns store-server.web
   (:use compojure.core
         ring.middleware.json
-        ring.util.response)
+        ring.util.response
+        store-server.controllers.helpers)
   (:require [store-server.catalogs.local :as catalog]
             [store-server.models.user :as user]
             [clj-http.client :as client]))
@@ -38,11 +39,15 @@
     (GET "/scale-products" []
       (response (catalog/read-bulk)))
 
-    (POST "/scans" [code]
-      (response (catalog/get-cpg (keyword code))))
+    (POST "/scans" [code :as req]
+      (with-authentication req db-descriptor
+        (fn []
+          (response (catalog/get-cpg (keyword code))))))
 
-    (POST "/scale-scans" [code]
-      (response (catalog/get-bulk (keyword code)))))
+    (POST "/scale-scans" [code :as req]
+      (with-authentication req db-descriptor
+        (fn []
+          (response (catalog/get-bulk (keyword code)))))))
 
   (def app
     (-> handler
