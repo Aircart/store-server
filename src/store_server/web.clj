@@ -27,7 +27,7 @@
                 {:status 201})
               (do
                 ;; update access token on existing user
-                (user/update-token db-descriptor facebook-fields facebook_access_token db-user)
+                (user/update-token db-descriptor db-user facebook-fields facebook_access_token)
                 {:status 200})))
             (user/fetch db-descriptor user-id) (:body response))
           {:status 401}))

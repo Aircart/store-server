@@ -7,7 +7,7 @@
     (if (nil? matches)
       ;; misformed token
       {:status 401}
-      (if (nil? (user/fetch-token db-descriptor (matches 1)))
+      (if (nil? (user/fetch-id db-descriptor (matches 1)))
         ;; could not find token
         {:status 401}
         ;; authentication successful
