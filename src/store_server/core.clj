@@ -12,4 +12,9 @@
   (with-open [main-db (db/open "db/main")]
 
     (println "Running server on port 3000")
-    (run-jetty (web/load-with-descriptor main-db) {:port 3000})))
+    (run-jetty (web/load-with-descriptor main-db)
+      { :port 8080
+        :ssl? true
+        :ssl-port 8443
+        :keystore "../etc/keystore"
+        :key-password "aircart" })))
