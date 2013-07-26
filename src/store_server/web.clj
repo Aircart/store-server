@@ -5,6 +5,7 @@
         store-server.controllers.helpers)
   (:require [store-server.catalogs.local :as catalog]
             [store-server.models.user :as user]
+            [store-server.models.cart :as cart]
             [clj-http.client :as client]))
 
 (defn simple-logging-middleware [appw]
@@ -43,33 +44,65 @@
 
     ;; TODO: namescape authenticated routes, separate routes and controller logic
 
-    (POST "/scans" [code :as req]
+    (POST "/carts" [store_id location :as req]
       (with-authentication req db-descriptor
         (fn [user-id]
-          ;; TODO: add item already present, return 200
-          { :status 201
-            :headers { "Location" (str "/cart-item/" code) }
-            :body (catalog/get-cpg (keyword code)) })))
+          (cart/create db-descriptor user-id)
+          { :status 201 })))
 
-    (POST "/scale-scans" [code :as req]
+    (GET "/cart" [:as req]
       (with-authentication req db-descriptor
         (fn [user-id]
-          ;; TODO: add item already present, return 200
-          { :status 201
-            :headers { "Location" (str "/cart-item/" code) }
-            :body (catalog/get-bulk (keyword code)) })))
+          (let [cart (cart/fetch db-descriptor user-id)]
+            (if (nil? cart)
+              { :status 404 }
+              (response {
+                :store_id "aircart_lab"
+                :items    (vec (for [[k v] cart]
+                            (if (< 5 (.length (name k))) ; test wether plu or barcode
+                              (merge { :barcode k
+                                       :quantity v }
+                                     (catalog/get-cpg (keyword k)))
+                              (merge { :plu k
+                                       :weight v }
+                                     (catalog/get-bulk (keyword k))))))}))))))
 
-    (PUT "/cart-item/:code" [code quantity :as req]
+    (POST "/scans" [barcode :as req]
       (with-authentication req db-descriptor
         (fn [user-id]
-          ;; TODO: update item's quantity in cart
-          { :status 204 })))
+          (let [code (keyword barcode)]
+            (let [existed? (cart/change db-descriptor user-id code)]
+              (if-not (nil? existed?) ; TODO: add error code for scan with no cart
+                (if existed?
+                  { :status 204 }
+                  { :status 201
+                    :headers { "Location" (str "/cart-items/" barcode) }
+                    :body (catalog/get-cpg code) })))))))
 
-    (DELETE "/cart-item/:code" [code :as req]
+    (POST "/scale-scans" [plu weight :as req]
       (with-authentication req db-descriptor
         (fn [user-id]
-          ;; TODO: remove item from cart
-          { :status 204 }))))
+          (let [code (keyword plu)]
+            (let [existed? (cart/change db-descriptor user-id code :qt weight)]
+              (if-not (nil? existed?) ; TODO: add error code for scan with no cart
+                (if existed?
+                  { :status 204 }
+                  { :status 201
+                    :headers { "Location" (str "/cart-items/" plu) }
+                    :body (catalog/get-bulk code) })))))))
+
+    (PUT "/cart-items/:code" [code quantity :as req]
+      (with-authentication req db-descriptor
+        (fn [user-id]
+          ;; this will create an item if none was scanned before...
+          (if-not (nil? (cart/change db-descriptor user-id (keyword code) :qt quantity :increment? false))
+            { :status 204 }))))
+
+    (DELETE "/cart-items/:code" [code :as req]
+      (with-authentication req db-descriptor
+        (fn [user-id]
+          (if-not (nil? (cart/change db-descriptor user-id (keyword code) :qt 0))
+            { :status 204 })))))
 
   (def app
     (-> handler

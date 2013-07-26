@@ -1,12 +1,12 @@
 '052100746036':
   name: Black PepperCorn Grinder
-  image: http://www.frugallivingnw.com/wp-content/uploads/2010/05/black-peppercorn-grinder.ashx_.jpg
+  image_url: http://www.frugallivingnw.com/wp-content/uploads/2010/05/black-peppercorn-grinder.ashx_.jpg
   price: 599
 '078742115238':
   name: Great Value Basil Leaves
-  image: http://i.walmartimages.com/i/p/00/07/87/42/11/0007874211523_500X500.jpg
+  image_url: http://i.walmartimages.com/i/p/00/07/87/42/11/0007874211523_500X500.jpg
   price: 199
 'default':
   name: Bundaberg Ginger Beer
-  image: http://www.bundaberg.com/info_assets/gb%20wet%20375ml%20with%20btbb%20aug10.jpg
-  price: 4
+  image_url: http://www.bundaberg.com/info_assets/gb%20wet%20375ml%20with%20btbb%20aug10.jpg
+  price: 400
