@@ -10,7 +10,8 @@
                  [compojure "1.1.5"]
                  [factual/factual-clojure-driver "1.5.1"]
                  [clj-http "0.7.5"]
-                 [org.clojars.aircart/leveldb-clj "0.1.0"]]
+                 [org.clojars.aircart/leveldb-clj "0.1.0"]
+                 [org.clojars.aircart/clj-stripe "1.0.4"]]
   :main store-server.core
   :plugins [[lein-beanstalk "0.2.7"]]    ; added for AWS
   :ring {:handler store-server.web/app}) ; added for AWS

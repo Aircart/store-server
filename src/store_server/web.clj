@@ -6,6 +6,7 @@
   (:require [store-server.catalogs.local :as catalog]
             [store-server.models.user :as user]
             [store-server.models.cart :as cart]
+            [store-server.models.card :as card]
             [clj-http.client :as client]))
 
 (defn simple-logging-middleware [appw]
@@ -102,7 +103,38 @@
       (with-authentication req db-descriptor
         (fn [user-id]
           (if-not (nil? (cart/change db-descriptor user-id (keyword code) :qt 0))
-            { :status 204 })))))
+            { :status 204 }))))
+
+    (GET "/cards" [:as req]
+      (with-authentication req db-descriptor
+        (fn [user-id]
+          (let [resp-map (card/fetch-all db-descriptor user-id)]
+            (if (nil? resp-map)
+              { :status 204 }
+              resp-map)))))
+
+    (POST "/cards" [:as req]
+      (with-authentication req db-descriptor
+        (fn [user-id]
+          (let [card-id (card/create db-descriptor user-id (:params req))]
+            (if (nil? card-id)
+              { :status 402 }
+              { :status 201
+                :headers { "Location" (str "/cards/" card-id) } })))))
+
+    (PUT "/default-card" [id :as req]
+      (with-authentication req db-descriptor
+        (fn [user-id]
+          (if (card/set-default db-descriptor user-id id)
+            { :status 200 }
+            { :status 404 }))))
+
+    (DELETE "/cards/:id" [id :as req]
+      (with-authentication req db-descriptor
+        (fn [user-id]
+          (if (card/delete db-descriptor user-id id)
+            { :status 200 }
+            { :status 404 })))))
 
   (def app
     (-> handler
