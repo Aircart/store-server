@@ -22,17 +22,18 @@
 (defn create [dbd user-id params]
   "Adds a new card to a user and make it the default card.
   The default logic and list storage currrently relies on Stripe."
-  (let [new-card (common/card (common/number (:number params))
-                              (common/expiration (:exp_month params) (:exp_year params))
-                              (common/cvc (:cvc params))
-                              (common/owner-name (:name params))
-                              (common/zip (:address_zip params)))]
+  (let [new-card (common/card (common/number (params "number"))
+                              (common/expiration (params "exp_month") (params "exp_year"))
+                              (common/cvc (params "cvc"))
+                              (common/owner-name (params "name"))
+                              (common/zip (params "address_zip")))]
     (let [stripe-id (get-stripe-id dbd user-id)]
       (common/with-token stripe-token
         (if (nil? stripe-id)
           ;; if the user has no customer account on Stripe, create one
           (let [user-map (user/fetch dbd user-id)]
             ;; store customer with new card on Stripe
+            ;; POSSIBLE BUG: does square accept a user with an incorrect card? if so, trouble.
             (let [stripe-response (common/execute (customers/create-customer new-card (customers/email (:email user-map)) (common/description (:name user-map))))]
               (if (nil? (:error stripe-response))
                 ;; store customer id
@@ -52,7 +53,7 @@
       ;; if no card, return nil
       (let [stripe-response (common/with-token stripe-token
         (common/execute (customers/get-customer stripe-id)))]
-        (if (< 0 (:count (:cards stripe-response)))
+        (if (< 0 (:count (:cards stripe-response))) ; crashes if user key is present in db but not Stripe (got deleted there or test/live mode)
           { :default_card (:default_card stripe-response)
             :cards (vec (for [card (:data (:cards stripe-response))]
                        (select-keys card [:id :last4 :type :exp_month :exp_year :name :address_zip]))) })))))
