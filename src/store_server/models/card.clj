@@ -54,7 +54,7 @@
       (let [stripe-response (common/with-token stripe-token
         (common/execute (customers/get-customer stripe-id)))]
         (if (< 0 (:count (:cards stripe-response))) ; crashes if user key is present in db but not Stripe (got deleted there or test/live mode)
-          { :default_card (:default_card stripe-response)
+          { :default_card_id (:default_card stripe-response)
             :cards (vec (for [card (:data (:cards stripe-response))]
                        (select-keys card [:id :last4 :type :exp_month :exp_year :name :address_zip]))) })))))
 
