@@ -14,6 +14,8 @@
     (println req)
     (appw req)))
 
+(def tax_rate 5.75)
+
 (defn load-with-descriptor [db-descriptor]
   (defroutes handler
 
@@ -49,7 +51,8 @@
       (with-authentication req db-descriptor
         (fn [user-id]
           (cart/create db-descriptor user-id)
-          { :status 201 })))
+          { :status 201
+            :body { :tax_rate tax_rate }})))
 
     (GET "/cart" [:as req]
       (with-authentication req db-descriptor
@@ -59,6 +62,7 @@
               { :status 404 }
               (response {
                 :store_id "aircart_lab"
+                :tax_rate tax_rate
                 :items    (vec (for [[k v] cart]
                             (if (< 5 (.length (name k))) ; test wether plu or barcode
                               (merge { :barcode k
@@ -111,7 +115,7 @@
           (let [resp-map (card/fetch-all db-descriptor user-id)]
             (if (nil? resp-map)
               { :status 204 }
-              resp-map)))))
+              (response resp-map))))))
 
     (POST "/cards" [:as req]
       (with-authentication req db-descriptor
@@ -134,7 +138,12 @@
         (fn [user-id]
           (if (card/delete db-descriptor user-id id)
             { :status 200 }
-            { :status 404 })))))
+            { :status 404 }))))
+
+    (POST "/checkouts"
+      (with-authentication req db-descriptor
+        (fn [user-id]
+          ))))
 
   (def app
     (-> handler
