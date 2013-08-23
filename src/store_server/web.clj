@@ -4,148 +4,97 @@
         ring.util.response
         store-server.controllers.helpers)
   (:require [store-server.catalogs.local :as catalog]
-            [store-server.models.user :as user]
-            [store-server.models.cart :as cart]
-            [store-server.models.card :as card]
-            [clj-http.client :as client]))
+            [store-server.controllers.users :as users]
+            [store-server.controllers.carts :as carts]
+            [store-server.controllers.cards :as cards]
+            [store-server.controllers.checkouts :as checkouts]))
+
+;; models to add:
+;; - models/event
+;; - models/employee - employee login via QR code
 
 (defn simple-logging-middleware [appw]
   (fn [req]
     (println req)
     (appw req)))
 
-(def tax_rate 5.75)
-
-(defn load-with-descriptor [db-descriptor]
+(defn load-with-descriptor [dbd]
   (defroutes handler
 
-    (PUT "/users/:user-id" [user-id facebook_access_token]
-      ((fn [response]
-        ;; switch fb's response
-        (if (= (:status response) 200)
-          ((fn [db-user facebook-fields]
-            (if (nil? db-user)
-              (do
-                ;; save new user
-                (user/save db-descriptor facebook-fields facebook_access_token)
-                {:status 201})
-              (do
-                ;; update access token on existing user
-                (user/update-token db-descriptor db-user facebook-fields facebook_access_token)
-                {:status 200}))
-              ;; TODO: set-up new cart
-            )
-            (user/fetch db-descriptor user-id) (:body response)) ; SECURITY: replace user-id with (:id (:body response))
-          {:status 401}))
-        ;; connect to facebook 
-        (client/get "https://graph.facebook.com/me" {:query-params {"access_token" facebook_access_token}
-                                                     :as :json ; output coercion
-                                                     :throw-exceptions false})))
+    ;; scale methods
+    ;;
 
     (GET "/scale-products" []
-      (response (catalog/read-bulk)))
+      (response (catalog/read-bulk))) ;; TODO: move into a controller and remove catalog require here
 
-    ;; TODO: namescape authenticated routes, separate routes and controller logic
+
+    ;; user methods
+    ;; TODO: namescape authenticated routes
+    ;;
+
+    (PUT "/users/:user-id" [user-id facebook_access_token]
+      (users/auth-facebook-user user-id facebook_access_token dbd))
 
     (POST "/carts" [store_id location :as req]
-      (with-authentication req db-descriptor
-        (fn [user-id]
-          (cart/create db-descriptor user-id)
-          { :status 201
-            :body { :tax_rate tax_rate }})))
+      (with-authentication req dbd
+        #(carts/create-cart % dbd)))
 
     (GET "/cart" [:as req]
-      (with-authentication req db-descriptor
-        (fn [user-id]
-          (let [cart (cart/fetch db-descriptor user-id)]
-            (if (nil? cart)
-              { :status 404 }
-              (response {
-                :store_id "aircart_lab"
-                :tax_rate tax_rate
-                :items    (vec (for [[k v] cart]
-                            (if (< 5 (.length (name k))) ; test wether plu or barcode
-                              (merge { :barcode k
-                                       :quantity v }
-                                     (catalog/get-cpg (keyword k)))
-                              (merge { :plu k
-                                       :weight v }
-                                     (catalog/get-bulk (keyword k))))))}))))))
+      (with-authentication req dbd
+        #(carts/get-current-cart % dbd)))
 
     (POST "/scans" [barcode :as req]
-      (with-authentication req db-descriptor
-        (fn [user-id]
-          (let [code (keyword barcode)]
-            (let [existed? (cart/change db-descriptor user-id code)]
-              (if-not (nil? existed?) ; TODO: add error code for scan with no cart
-                (if existed?
-                  { :status 204 }
-                  { :status 201
-                    :headers { "Location" (str "/cart-items/" barcode) }
-                    :body (catalog/get-cpg code) })))))))
+      (with-authentication req dbd
+        #(carts/add-cpg-item barcode % dbd)))
 
     (POST "/scale-scans" [plu weight :as req]
-      (with-authentication req db-descriptor
-        (fn [user-id]
-          (let [code (keyword plu)]
-            (let [existed? (cart/change db-descriptor user-id code :qt weight)]
-              (if-not (nil? existed?) ; TODO: add error code for scan with no cart
-                (if existed?
-                  { :status 204 }
-                  { :status 201
-                    :headers { "Location" (str "/cart-items/" plu) }
-                    :body (catalog/get-bulk code) })))))))
+      (with-authentication req dbd
+        #(carts/add-bulk-item plu weight % dbd)))
 
     (PUT "/cart-items/:code" [code quantity :as req]
-      (with-authentication req db-descriptor
-        (fn [user-id]
-          ;; this will create an item if none was scanned before...
-          (if-not (nil? (cart/change db-descriptor user-id (keyword code) :qt quantity :increment? false))
-            { :status 204 }))))
+      (with-authentication req dbd
+        #(carts/change-item-quantity code quantity % dbd)))
 
     (DELETE "/cart-items/:code" [code :as req]
-      (with-authentication req db-descriptor
-        (fn [user-id]
-          (if-not (nil? (cart/change db-descriptor user-id (keyword code) :qt 0))
-            { :status 204 }))))
+      (with-authentication req dbd
+        #(carts/remove-item code % dbd)))
 
     (GET "/cards" [:as req]
-      (with-authentication req db-descriptor
-        (fn [user-id]
-          (let [resp-map (card/fetch-all db-descriptor user-id)]
-            (if (nil? resp-map)
-              { :status 204 }
-              (response resp-map))))))
+      (with-authentication req dbd
+        #(cards/list-cards % dbd)))
 
     (POST "/cards" [:as req]
-      (with-authentication req db-descriptor
-        (fn [user-id]
-          (let [card-id (card/create db-descriptor user-id (:params req))]
-            (if (nil? card-id)
-              { :status 402 }
-              { :status 201
-                :headers { "Location" (str "/cards/" card-id) } })))))
+      (with-authentication req dbd
+        #(cards/add-card (:params req) % dbd)))
 
     (PUT "/default-card" [id :as req]
-      (with-authentication req db-descriptor
-        (fn [user-id]
-          (if (card/set-default db-descriptor user-id id)
-            { :status 200 }
-            { :status 404 }))))
+      (with-authentication req dbd
+        #(cards/set-default-card id % dbd)))
 
     (DELETE "/cards/:id" [id :as req]
-      (with-authentication req db-descriptor
-        (fn [user-id]
-          (if (card/delete db-descriptor user-id id)
-            { :status 200 }
-            { :status 404 }))))
+      (with-authentication req dbd
+        #(cards/delete-card id % dbd)))
 
-    (POST "/checkouts"
-      (with-authentication req db-descriptor
-        (fn [user-id]
-          ))))
+    (GET "/receipts/create" [:as req] ; websocket
+      (with-authentication req dbd
+        #(checkouts/user-checkout % req dbd)))
+
+
+    ;; checkpoint methods
+    ;; TODO: add checkpoint auth
+    ;;
+
+    (GET "/checkouts" [:as req] ; websocket
+      (checkouts/checkpoint-subscribe req))
+
+    (GET "/checkouts/:user-id/finalize" [user-id :as req] ; websocket
+      (checkouts/finalize user-id req dbd))
+
+    (DELETE "/checkouts/:user-id" [user-id]
+      (checkouts/abort user-id)))
 
   (def app
+    ;; TODO: use api wrapper with standard form-type params?
     (-> handler
       wrap-json-params
       wrap-json-response

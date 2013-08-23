@@ -6,6 +6,18 @@
   name: Great Value Basil Leaves
   image_url: http://i.walmartimages.com/i/p/00/07/87/42/11/0007874211523_500X500.jpg
   price: 199
+'052000241204':
+  name: Cherry Coke
+  image_url: http://www.westoneswholesale.com/WebRoot/BT2/Shops/BT3918/4BC2/F511/FE43/0817/D3CD/0A0A/33E8/A869/CHERRY_COKE.jpg
+  price: 150
+'044800001447':
+  name: Triscuit Original
+  image_url: http://img1.targetimg1.com/wcsstore/TargetSAS//img/p/12/95/12959631_201307221336.jpg
+  price: 320
+'041220796076':
+  name: Blue Bottle Coffee
+  image_url: https://drive.google.com/uc?export=view&id=0B_yEsHOtzN3yRlV1N0ljaUZkMEE
+  price: 925
 'default':
   name: Bundaberg Ginger Beer
   image_url: http://www.bundaberg.com/info_assets/gb%20wet%20375ml%20with%20btbb%20aug10.jpg

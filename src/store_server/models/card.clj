@@ -3,12 +3,15 @@
             [store-server.models.user :as user]
             [clj-stripe.common :as common]
             [clj-stripe.customers :as customers]
-            [clj-stripe.cards :as cards]))
+            [clj-stripe.cards :as cards]
+            [clj-http.client :as client]))
 
-(def stripe-token "sk_test_TO0mzOhZ992dsx5msaAWce1Y")
+(defonce stripe-token "sk_test_TO0mzOhZ992dsx5msaAWce1Y")
+(defonce api-root     "https://api.stripe.com/v1")
+(defonce client-options {:basic-auth stripe-token :throw-exceptions false :coerce :always :as :json})
 
 ;; 
-;; TODO: implement customer logic on Aircart's side
+;; TODO: implement customer logic on Aircart's side vs. Stripe
 ;; TODO: remove usage of clj-stripe lib horror
 ;; TODO: method for change billing?
 ;; store key: user_userid_stripe
@@ -21,7 +24,8 @@
 
 (defn create [dbd user-id params]
   "Adds a new card to a user and make it the default card.
-  The default logic and list storage currrently relies on Stripe."
+  The default logic and list storage currrently relies on Stripe.
+  Returns the id of the card that was stored on Stripe."
   (let [new-card (common/card (common/number (params "number"))
                               (common/expiration (params "exp_month") (params "exp_year"))
                               (common/cvc (params "cvc"))
@@ -35,7 +39,7 @@
             ;; store customer with new card on Stripe
             ;; POSSIBLE BUG: does square accept a user with an incorrect card? if so, trouble.
             (let [stripe-response (common/execute (customers/create-customer new-card (customers/email (:email user-map)) (common/description (:name user-map))))]
-              (if (nil? (:error stripe-response))
+              (when (nil? (:error stripe-response))
                 ;; store customer id
                 (db/put dbd (.getBytes (str "user_" user-id "_stripe")) (.getBytes (:id stripe-response)))
                 ;; return stripe card id
@@ -58,16 +62,52 @@
             :cards (vec (for [card (:data (:cards stripe-response))]
                        (select-keys card [:id :last4 :type :exp_month :exp_year :name :address_zip]))) })))))
 
-;; set default
 (defn set-default [dbd user-id card-id]
+  "Set card as default.
+  Returns true if successful, false otherwise."
   (let [stripe-id (get-stripe-id dbd user-id)]
     (if-not (nil? stripe-id)
       (nil? (:error (common/with-token stripe-token
         (common/execute (customers/update-customer stripe-id { "default_card" card-id }))))))))
 
-;; remove card
 (defn delete [dbd user-id card-id]
+  "Remove a card.
+  Returns true if successful, false otherwise."
   (let [stripe-id (get-stripe-id dbd user-id)]
     (if-not (nil? stripe-id)
       (nil? (:error (common/with-token stripe-token
         (common/execute (cards/delete-card stripe-id (common/card card-id) (common/customer stripe-id)))))))))
+
+(defn charge [dbd user-id amount]
+  "Charge a user using his default card for a given amount, without capturing
+  the charge. Returns the charge-id or nil if unsuccessful (charge was declined
+  or the customer has no card)."
+  ; handle no stripe id as no card
+  ; expired, missing, declined, invalid, processing issue
+  (let [resp (client/post (str api-root "/charges") (merge client-options {:query-params
+    { :amount   amount
+      :currency "usd"
+      :customer (get-stripe-id dbd user-id)
+      :capture  false }}))]
+    (if-not (nil? (resp :error))
+      (do
+        (when (not= "card_error" ((resp :error) :type))
+          (throw (Exception. ((resp :error) :message)))) ;; TODO: add exception logger
+        [nil {:type ((resp :error) :type) :message ((resp :error) :message)}])
+      [(resp :id) nil])))
+
+(defn capture [charge-id]
+  "Capture a charge.
+  Returns true if successful, false otherwise."
+  (let [resp (client/post (str api-root "/charges/" charge-id "/capture") client-options)]
+    (when-not (nil? (resp :error))
+      (throw (Exception. ((resp :error) :message))))
+    (nil? (resp :error))))
+
+(defn release [charge-id]
+  "Release a charge.
+  Returns true if successful, false otherwise."
+  (let [resp (client/post (str api-root "/charges/" charge-id "/refund") client-options)]
+    (when-not (nil? (resp :error))
+      (throw (Exception. ((resp :error) :message))))
+    (nil? (resp :error))))
