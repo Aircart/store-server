@@ -7,6 +7,10 @@
 (defonce checkpoint-channel (atom nil))
 (defonce user-channels (atom {}))
 
+(defn checking-out? [user-id]
+  "This method is used to secure cart change requests."
+  (not (nil? (@user-channels user-id))))
+
 (defn checkpoint-subscribe [req]
   "Checkpoint method to subscribe to all incoming checkouts and open channel."
   (with-channel req channel
@@ -20,7 +24,7 @@
 
 (defn user-checkout [user-id req dbd]
   "Main method handling user checkout, initiated by the user. Cannot execute
-  if the checkppint is not connected."
+  if the checkpoint is not connected."
   (if (nil? @checkpoint-channel)
     {:status  503
      :headers {"Reason-Phrase" "The checkpoint is not online"}}
@@ -28,11 +32,12 @@
       {:status  409
        :headers {"Reason-Phrase" "You already have a checkout in progress"}}
       (let [cart (cart/fetch dbd user-id)]
-        (if (empty? cart)
+        (if (empty? (-> cart :items))
           {:status  403
-           :headers {"Reason-Phrase" "Your cart is empty"}}
+           :headers {"Reason-Phrase" "You don't have a cart or your cart is empty"}}
           ;; place lock on credit card
-          (let [[charge-id error] (card/charge dbd user-id ((cart/compute-total cart) :total))]
+          (let [total-map (cart/compute-total cart)
+               [charge-id error] (card/charge dbd user-id (total-map :total))]
             (if-not (nil? error)
               (if (not= "card_error" (error :type)) ;; or could be 500 if invalid_request_error
                 {:status 502
@@ -50,7 +55,10 @@
                   ;; notify checkpoint (use watch? or agents?)
                   (send! @checkpoint-channel (format "%s: close" user-id)))) ; TODO: verify checkpoint-channel open to avoid frivolous notification?
                 ;; append to atom
-                (swap! user-channels #(assoc % user-id {:chan channel :cart cart :charge-id charge-id}))
+                (swap! user-channels #(assoc % user-id {:chan      channel
+                                                        :cart      cart ; TODO: replace with cart-id
+                                                        :total-map total-map
+                                                        :charge-id charge-id}))
                 ;; notify checkpoint (use watch? or agents?)
                 (send! @checkpoint-channel (format "%s: open" user-id))))))))))
 
@@ -59,11 +67,11 @@
   if any."
   ;; TODO: implement abort hooks from other methods, add finalization channel to atom
   (let [userc (@user-channels user-id)]
-    (if (nil? userc)
+    (if (nil? userc) ; use if-let?
       {:status 404}
       ;; TODO: implement websockets/verification
       ; generate receipt with payment hold
-      (let [receipt-id (receipt/create dbd user-id (userc :cart) (userc :charge-id))]
+      (let [receipt-id (receipt/create dbd user-id (userc :cart) (userc :total-map) (userc :charge-id))]
         (if (nil? receipt-id)
           {:status 500}
           (do
@@ -80,6 +88,14 @@
         (close (userc :chan) 1001)
         {:status 204}))))
 
+(defn list-purchases [user-id]
+  "Get the content (without prices) of a user's cart currently checking out.
+  This will get the cart-id from the open channel, and thus is still exact if
+  the user starts a new cart in parallel."
+  (if-let [userc (@user-channels user-id)]
+    {:status 200
+     :body (cart/select-purchases (userc :cart))}
+    {:status 404}))
 
 ;; self-finalization -- UNIMPLEMENTED
 

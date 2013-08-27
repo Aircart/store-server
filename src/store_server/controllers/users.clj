@@ -19,3 +19,8 @@
             (user/update-token dbd db-user facebook-fields facebook_access_token)
             {:status 200})))
       {:status 401})))
+
+(defn get-details [user-id]
+  "Get user details for the checkpoint.
+  Only includes first name and picture url."
+  )

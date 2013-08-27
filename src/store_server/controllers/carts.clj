@@ -1,53 +1,63 @@
 (ns store-server.controllers.carts
   (:require [store-server.models.cart :as cart]
-            [store-server.catalogs.local :as catalog]))
+            [store-server.models.store :as store]
+            [store-server.catalogs.local :as local]
+            [store-server.catalogs.factual :as factual]))
 
-(defn create-cart [user-id dbd]
-  (cart/create dbd user-id)
-  { :status 201
-    :body { :tax_rate cart/tax_rate }})
+(defn create-cart [store-id user-id dbd]
+  (if (cart/create dbd user-id store-id)
+    { :status 201 }
+    { :status 404 }))
 
 (defn get-current-cart [user-id dbd]
-  (let [cart (cart/fetch dbd user-id)]
-    (if (nil? cart)
-      { :status 404 }
-      { :status 200
-        :body {
-          :store_id "aircart_lab"
-          :tax_rate cart/tax_rate ;; ISSUE: name conflict with let?
-          :items    (vec (for [[k v] cart]
-                      (if (< 5 (.length (name k))) ; test wether plu or barcode
-                        (merge { :barcode k
-                                 :quantity v }
-                               (catalog/get-cpg (keyword k)))
-                        (merge { :plu k
-                                 :weight v }
-                               (catalog/get-bulk (keyword k))))))}})))
+  (if-let [cart (cart/fetch dbd user-id)]
+    { :status 200
+      :body {
+        :store_id (cart :store)
+        :items    (cart/attach-item-details (cart :store) (cart :items))}}
+    { :status 404 }))
 
 ;; separate controller for scans?
+;; allow scanning item with given quantity?
 (defn add-cpg-item [barcode user-id dbd]
-  (let [code (keyword barcode) existed? (cart/change dbd user-id code)]
-    (if-not (nil? existed?) ; TODO: add error code for scan with no cart
-      (if existed?
-        { :status 204 }
-        { :status 201
-          :headers { "Location" (str "/cart-items/" barcode) }
-          :body (catalog/get-cpg code) }))))
+  (if-let [cart-id-bytes (cart/get-cart-id-bytes dbd user-id)]
+    ;; TODO: - add method to fetch item without dealing with store ns
+    ;;       - separate logic so as not to deal with cart-id-bytes
+    (let [cart (cart/fetch-with-cib dbd cart-id-bytes) store-space (symbol ((store/fetch (cart :store)) :ns))]
+      (if-let [item-details ((ns-resolve store-space 'get-cpg) barcode)]
+        (if (pos? (cart/update-and-write dbd cart cart-id-bytes barcode :price (item-details :price)))
+          { :status 204 }
+          { :status 201
+            :headers { "Location" (str "/cart-items/" barcode) }
+            :body    item-details })
+        { :status 404 }))
+    { :status 403 }))
 
 (defn add-bulk-item [plu weight user-id dbd]
-  (let [code (keyword plu) existed? (cart/change dbd user-id code :qt weight)]
-    (if-not (nil? existed?) ; TODO: add error code for scan with no cart
-      (if existed?
-        { :status 204 }
-        { :status 201
-          :headers { "Location" (str "/cart-items/" plu) }
-          :body (catalog/get-bulk code) }))))
+  (if-let [cart-id-bytes (cart/get-cart-id-bytes dbd user-id)]
+    ;; TODO: - add method to fetch item without dealing with store ns
+    ;;       - separate logic so as not to deal with cart-id-bytes
+    (let [cart (cart/fetch-with-cib dbd cart-id-bytes) store-space (symbol ((store/fetch (cart :store)) :ns))]
+      (if-let [item-details ((ns-resolve store-space 'get-bulk) plu)]
+        (if (pos? (cart/update-and-write dbd cart cart-id-bytes plu :qt weight :price (item-details :price_per_gram)))
+          { :status 204 }
+          { :status 201
+            :headers { "Location" (str "/cart-items/" plu) }
+            :body    item-details })
+        { :status 404 }))
+    { :status 403 }))
 
 (defn change-item-quantity [code quantity user-id dbd]
-  ;; this will create an item if none was scanned before...
-  (if-not (nil? (cart/change dbd user-id (keyword code) :qt quantity :increment? false))
-    { :status 204 }))
+  (if-let [cart-id-bytes (cart/get-cart-id-bytes dbd user-id)]
+    ;; TODO: - add method to fetch item without dealing with store ns
+    ;;       - separate logic so as not to deal with cart-id-bytes
+    (let [cart (cart/fetch-with-cib dbd cart-id-bytes) kcode (keyword code)]
+      (if (cart :items kcode)
+        (do
+          (cart/update-and-write dbd cart cart-id-bytes code :qt quantity :reset? true)
+          { :status 204 })
+        { :status 404 }))
+    { :status 403 }))
 
 (defn remove-item [code user-id dbd]
-  (if-not (nil? (cart/change dbd user-id (keyword code) :qt 0))
-    { :status 204 }))
+  (change-item-quantity code 0 user-id dbd))

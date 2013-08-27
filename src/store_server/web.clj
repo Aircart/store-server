@@ -5,6 +5,7 @@
         store-server.controllers.helpers)
   (:require [store-server.catalogs.local :as catalog]
             [store-server.controllers.users :as users]
+            [store-server.controllers.stores :as stores]
             [store-server.controllers.carts :as carts]
             [store-server.controllers.cards :as cards]
             [store-server.controllers.checkouts :as checkouts]))
@@ -12,6 +13,10 @@
 ;; models to add:
 ;; - models/event
 ;; - models/employee - employee login via QR code
+
+;; LOGIC/SECURITY concern:
+;; - freeze prices on cart (change during session, fixed prices on receipt)
+;; - forbid cart change actions if user has ongoing checkout
 
 (defn simple-logging-middleware [appw]
   (fn [req]
@@ -32,12 +37,15 @@
     ;; TODO: namescape authenticated routes
     ;;
 
+    (GET "/stores/:store-id" [store-id]
+      (stores/get-store store-id))
+
     (PUT "/users/:user-id" [user-id facebook_access_token]
       (users/auth-facebook-user user-id facebook_access_token dbd))
 
     (POST "/carts" [store_id location :as req]
       (with-authentication req dbd
-        #(carts/create-cart % dbd)))
+        #(carts/create-cart store_id % dbd)))
 
     (GET "/cart" [:as req]
       (with-authentication req dbd
@@ -91,7 +99,14 @@
       (checkouts/finalize user-id req dbd))
 
     (DELETE "/checkouts/:user-id" [user-id]
-      (checkouts/abort user-id)))
+      (checkouts/abort user-id))
+
+    (GET "/purchases/:user-id" [user-id]
+      (checkouts/list-purchases user-id))
+
+    (GET "/users/:user-id" [user-id]
+      (users/get-details user-id)))
+
 
   (def app
     ;; TODO: use api wrapper with standard form-type params?

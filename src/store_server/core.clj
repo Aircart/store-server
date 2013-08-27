@@ -12,17 +12,11 @@
   (let [main-db (db/open "db/main")]
 
     (println "Running server on port 8080")
-    ; (run-jetty (web/load-with-descriptor main-db)
-    ;   { :port 8080
-    ;     :ssl? true
-    ;     :ssl-port 8443
-    ;     :keystore "../etc/keystore"
-    ;     :key-password "aircart" })))
     (run-server (web/load-with-descriptor main-db) {:port 8080})))
 
 ;; TODO: add Runtime.getRuntime().addShutdownHook to close db file
 ;;       use atom/promise to pass db-descriptor around?
-;; see: http://stackoverflow.com/questions/10855559/shutdown-hook-doesnt-fire-when-running-with-lein-run
-;;      http://docs.oracle.com/javase/1.4.2/docs/guide/lang/hook-design.html
+;; see:  http://stackoverflow.com/questions/10855559/shutdown-hook-doesnt-fire-when-running-with-lein-run
+;;       http://docs.oracle.com/javase/1.4.2/docs/guide/lang/hook-design.html
 
 ;; TODO: set up as a daemon for prod
