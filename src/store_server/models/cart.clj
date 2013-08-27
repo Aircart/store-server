@@ -39,12 +39,13 @@
   (when (store/fetch store-id)
     (doto
       (str "cart_" user-id "_" store-id "_" (random-string 8))
-      #( ;; store empty cart
+      (#(do
+         ;; store empty cart
          (db/put db-descriptor (.getBytes %)
                                (.getBytes (pr-str { :store store-id :items (array-map) })))
          ;; save it as current cart
          (db/put db-descriptor (user-to-cib user-id)
-                               (.getBytes %))))))
+                               (.getBytes %)))))))
 
 (defn fetch-with-cib [dbd cart-id-bytes]
   (read-string (String. (db/get dbd cart-id-bytes))))
@@ -65,7 +66,7 @@
   (let [kcode (keyword code)]
     (doto
       (or (-> cart :items kcode :qt) 0) ; % previous quantity
-      #(when (if reset? (not= % qt) (not= 0 qt)) ; ensure there is something to change
+      (#(when (if reset? (not= % qt) (not= 0 qt)) ; ensure there is something to change
         (db/put dbd cart-id-bytes
           (.getBytes (pr-str
             (if (= 0 qt)
@@ -74,7 +75,7 @@
               (assoc-in cart [:items kcode] { :price (if (= 0 %)
                                                 price
                                                 (-> cart :items kcode :price))
-                                              :qt (if reset? qt (+ % qt)) })))))))))
+                                              :qt (if reset? qt (+ % qt)) }))))))))))
 
 (defn compute-total [cart]
   "Compute the cart subtotal, and total with taxes."
