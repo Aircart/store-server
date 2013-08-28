@@ -9,6 +9,7 @@
 
 (defn checking-out? [user-id]
   "This method is used to secure cart change requests."
+  ;; TODO: match cart-id
   (not (nil? (@user-channels user-id))))
 
 (defn checkpoint-subscribe [req]
@@ -31,7 +32,7 @@
     (if-not (nil? (@user-channels user-id))
       {:status  409
        :headers {"Reason-Phrase" "You already have a checkout in progress"}}
-      (let [cart (cart/fetch dbd user-id)]
+      (let [cart-id (cart/get-current-cart-id dbd user-id) cart (cart/fetch-with-id dbd cart-id)]
         (if (empty? (-> cart :items))
           {:status  403
            :headers {"Reason-Phrase" "You don't have a cart or your cart is empty"}}
@@ -56,7 +57,7 @@
                   (send! @checkpoint-channel (format "%s: close" user-id)))) ; TODO: verify checkpoint-channel open to avoid frivolous notification?
                 ;; append to atom
                 (swap! user-channels #(assoc % user-id {:chan      channel
-                                                        :cart      cart ; TODO: replace with cart-id
+                                                        :cart-id   cart-id
                                                         :total-map total-map
                                                         :charge-id charge-id}))
                 ;; notify checkpoint (use watch? or agents?)
@@ -71,7 +72,7 @@
       {:status 404}
       ;; TODO: implement websockets/verification
       ; generate receipt with payment hold
-      (let [receipt-id (receipt/create dbd user-id (userc :cart) (userc :total-map) (userc :charge-id))]
+      (let [receipt-id (receipt/create dbd user-id (userc :cart-id) (userc :total-map) (userc :charge-id))]
         (if (nil? receipt-id)
           {:status 500}
           (do
@@ -88,13 +89,13 @@
         (close (userc :chan) 1001)
         {:status 204}))))
 
-(defn list-purchases [user-id]
+(defn list-purchases [user-id dbd]
   "Get the content (without prices) of a user's cart currently checking out.
   This will get the cart-id from the open channel, and thus is still exact if
   the user starts a new cart in parallel."
   (if-let [userc (@user-channels user-id)]
     {:status 200
-     :body (cart/select-purchases (userc :cart))}
+     :body (cart/select-purchases (cart/fetch-with-id dbd (userc :cart-id)))}
     {:status 404}))
 
 ;; self-finalization -- UNIMPLEMENTED

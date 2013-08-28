@@ -8,7 +8,8 @@
             [store-server.controllers.stores :as stores]
             [store-server.controllers.carts :as carts]
             [store-server.controllers.cards :as cards]
-            [store-server.controllers.checkouts :as checkouts]))
+            [store-server.controllers.checkouts :as checkouts]
+            [store-server.controllers.receipts :as receipts]))
 
 ;; models to add:
 ;; - models/event
@@ -16,7 +17,7 @@
 
 ;; LOGIC/SECURITY concern:
 ;; - freeze prices on cart (change during session, fixed prices on receipt)
-;; - forbid cart change actions if user has ongoing checkout
+;; - forbid cart change actions if user has ongoing checkout (on specific cart-id)
 
 (defn simple-logging-middleware [appw]
   (fn [req]
@@ -87,6 +88,13 @@
       (with-authentication req dbd
         #(checkouts/user-checkout % req dbd)))
 
+    (GET "/receipts" [:as req]
+      (with-authentication req dbd
+        #(receipts/list-receipts % dbd)))
+
+    (GET "/receipts/:id" [id :as req]
+      (with-authentication req dbd
+        #(receipts/get-receipt id % dbd)))
 
     ;; checkpoint methods
     ;; TODO: add checkpoint auth
@@ -102,7 +110,7 @@
       (checkouts/abort user-id))
 
     (GET "/purchases/:user-id" [user-id]
-      (checkouts/list-purchases user-id))
+      (checkouts/list-purchases user-id dbd))
 
     (GET "/users/:user-id" [user-id]
       (users/get-details user-id dbd)))

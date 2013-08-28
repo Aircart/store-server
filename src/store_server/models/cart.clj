@@ -8,6 +8,8 @@
 ;; TODO: use a vector or maps vs. array-map
 ;;       - this will help with using ProtoBuf
 ;;       - this will allow using strings vs keywords for codes
+;; or use ordered sets, see:
+;; https://github.com/flatland/ordered
 
 ;; Cart Model
 ;;
@@ -24,11 +26,14 @@
 ;;   }
 ;; }
 
-(defn user-to-cib [user-id]
+(defn current-cart-bytes [user-id]
   (.getBytes (str "user_" user-id "_cart")))
 
 (defn get-cart-id-bytes [dbd user-id]
-  (db/get dbd (user-to-cib user-id)))
+  (db/get dbd (current-cart-bytes user-id)))
+
+(defn get-current-cart-id [dbd user-id]
+  (String. (get-cart-id-bytes dbd user-id)))
 
 ; TODO: expire cart? (price change issues)
 (defn create [db-descriptor user-id store-id] ;; should the db operations be batched?
@@ -44,11 +49,15 @@
          (db/put db-descriptor (.getBytes %)
                                (.getBytes (pr-str { :store store-id :items (array-map) })))
          ;; save it as current cart
-         (db/put db-descriptor (user-to-cib user-id)
+         (db/put db-descriptor (current-cart-bytes user-id)
                                (.getBytes %)))))))
 
 (defn fetch-with-cib [dbd cart-id-bytes]
   (read-string (String. (db/get dbd cart-id-bytes))))
+
+(defn fetch-with-id [dbd cart-id]
+  "Fetch a cart as a map using the given cart-id."
+  (fetch-with-cib dbd (.getBytes cart-id)))
 
 ;; how to get correct order for phone?/switch for checkpoint
 (defn fetch [db-descriptor user-id]
@@ -61,6 +70,7 @@
   "Add an item, remove it, or update the quantity of an existing item.
   Returns the previous quantity.
   * Cart existence must be checked beforehand.
+  * Item existence is not checked
   * Price must be provided if it's a new item or it will be nil."
   ;; TODO: make transactional
   (let [kcode (keyword code)]
@@ -71,7 +81,6 @@
           (.getBytes (pr-str
             (if (= 0 qt)
               (dissoc cart [:items kcode])
-              ;; TODO: handle item not found? -> done by controller
               (assoc-in cart [:items kcode] { :price (if (= 0 %)
                                                 price
                                                 (-> cart :items kcode :price))
@@ -88,9 +97,11 @@
       :tax_rate tax-rate
       :total    (with-precision 2 (* subtotal (+ (/ tax-rate 100) 1)))}))
 
-(defn unlink-current-cart [dbd user-id]
-  "Removes the user's current cart."
-  )
+(defn unlink-if-current [dbd user-id cart-id] ; TODO: check that no new cart was created (pass cart-id-bytes)
+  "Removes the user's current cart if it matches cart-id."
+  (let [current-cart-id (get-current-cart-id dbd user-id)]
+    (when (= current-cart-id cart-id)
+      (db/delete dbd (current-cart-bytes user-id)))))
 
 (defn attach-item-details [store-id items]
   "Take items as stored in the cart struct and attach information from the 

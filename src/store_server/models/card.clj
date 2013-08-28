@@ -78,6 +78,8 @@
       (nil? (:error (common/with-token stripe-token
         (common/execute (cards/delete-card stripe-id (common/card card-id) (common/customer stripe-id)))))))))
 
+;; TODO: handle exceptions with no :body in clj-http response (connection error etc.)
+
 (defn charge [dbd user-id amount]
   "Charge a user using his default card for a given amount, without capturing
   the charge. Returns the charge-id or nil if unsuccessful (charge was declined
@@ -85,29 +87,36 @@
   ; handle no stripe id as no card
   ; expired, missing, declined, invalid, processing issue
   (let [resp (client/post (str api-root "/charges") (merge client-options {:query-params
-    { :amount   amount
+    { :amount   (int (* amount 100)) ; Stripe wants an integer in cents
       :currency "usd"
       :customer (get-stripe-id dbd user-id)
-      :capture  false }}))]
-    (if-not (nil? (resp :error))
+      :capture  false }})) body (resp :body)]
+    (if-not (nil? (body :error))
       (do
-        (when (not= "card_error" ((resp :error) :type))
-          (throw (Exception. ((resp :error) :message)))) ;; TODO: add exception logger
-        [nil {:type ((resp :error) :type) :message ((resp :error) :message)}])
-      [(resp :id) nil])))
+        (when (not= "card_error" ((body :error) :type))
+          (throw (Exception. ((body :error) :message)))) ;; TODO: add exception logger
+        [nil {:type ((body :error) :type) :message ((body :error) :message)}])
+      [(body :id) nil])))
 
 (defn capture [charge-id]
   "Capture a charge.
   Returns true if successful, false otherwise."
-  (let [resp (client/post (str api-root "/charges/" charge-id "/capture") client-options)]
-    (when-not (nil? (resp :error))
-      (throw (Exception. ((resp :error) :message))))
-    (nil? (resp :error))))
+  (let [resp (client/post (str api-root "/charges/" charge-id "/capture") client-options) body (resp :body)]
+    (when-not (nil? (body :error))
+      (throw (Exception. ((body :error) :message))))
+    (nil? (body :error))))
 
 (defn release [charge-id]
   "Release a charge.
   Returns true if successful, false otherwise."
-  (let [resp (client/post (str api-root "/charges/" charge-id "/refund") client-options)]
-    (when-not (nil? (resp :error))
-      (throw (Exception. ((resp :error) :message))))
-    (nil? (resp :error))))
+  (let [resp (client/post (str api-root "/charges/" charge-id "/refund") client-options) body (resp :body)]
+    (when-not (nil? (body :error))
+      (throw (Exception. ((body :error) :message))))
+    (nil? (body :error))))
+
+(defn get-charge [charge-id]
+  "Get details for a charge previosuly created." ;; TODO: verify it return nil on error / usage of return value
+  (let [resp (client/get (str api-root "/charges/" charge-id) client-options) body (resp :body)]
+    (if-not (nil? (body :error))
+      (throw (Exception. ((body :error) :message)))
+      body)))
