@@ -4,7 +4,7 @@
 (defn facebook-to-bytes [facebook-fields access-token]
   (.getBytes (pr-str (merge facebook-fields {:facebook_token access-token}))))
 
-(defn bytes-to-map [bytes]
+(defn bytes-to-map [bytes] ; TODO: move into utility function
   (read-string (String. bytes)))
 
 (defn fetch [db-descriptor user-id]

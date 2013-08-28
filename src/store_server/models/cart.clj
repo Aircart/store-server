@@ -109,4 +109,5 @@
 
 (defn select-purchases [cart]
   "Format a cart for display at the checkpoint."
-  )
+  (map #(dissoc % :price :price_per_gram)
+    (attach-item-details (cart :store) (cart :items))))

@@ -20,7 +20,12 @@
             {:status 200})))
       {:status 401})))
 
-(defn get-details [user-id]
+(defn get-details [user-id dbd]
   "Get user details for the checkpoint.
   Only includes first name and picture url."
-  )
+  (if-let [user-map (user/fetch dbd user-id)]
+    { :status 200 
+      :body   (merge
+                (select-keys user-map [:first_name])
+                {:picture_url (format "http://graph.facebook.com/%s/picture?width=200&height=200" user-id)})}
+    { :status 404 }))

@@ -17,10 +17,10 @@
 (defn create [dbd user-id cart total-map charge-id]
   "Create a new receipt using the charge-id authorization and cart for user-id.
   Returns the receipt-id (and unlink the cart) or nil if the capture failed."
-  (let [success? (card/capture charge-id)
+  (let [success? (card/capture charge-id)]
     ;; get taxes  - how to ensure same as checkpoint?
     ;; get totals (compute from get taxes)
-    ]))
+    ))
 
 ;; list user receipts
 

@@ -105,7 +105,7 @@
       (checkouts/list-purchases user-id))
 
     (GET "/users/:user-id" [user-id]
-      (users/get-details user-id)))
+      (users/get-details user-id dbd)))
 
 
   (def app
