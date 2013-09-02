@@ -109,14 +109,14 @@
   (let [space (symbol ((store/fetch store-id) :ns))]
     (vec (for [[k v] items]
       (if (plu? k) ; test wether plu or barcode
-        (merge ((ns-resolve space 'get-cpg) k)
-               { :barcode        (name k)
-                 :quantity       (v :qt)
-                 :price          (v :price) })
         (merge ((ns-resolve space 'get-bulk) k)
                { :plu            (name k)
                  :weight         (v :qt)
-                 :price_per_gram (v :price) }))))))
+                 :price_per_gram (v :price) })
+        (merge ((ns-resolve space 'get-cpg) k)
+               { :barcode        (name k)
+                 :quantity       (v :qt)
+                 :price          (v :price) }))))))
 
 (defn select-purchases [cart]
   "Format a cart for display at the checkpoint."
