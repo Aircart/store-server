@@ -1,17 +1,23 @@
 (ns store-server.db.seeds
-  (:require [store-server.catalogs.local :as catalog]
+  (:require [clj-yaml.core :as yaml]
+            [store-server.models.user :as user]
             [store-server.controllers.carts :as carts]
             [store-server.models.card :as card]))
 
-(defn seed-cart [user-id dbd]
-  ;; create a new cart
-  (carts/create-cart "aircart_lab" user-id dbd)
-  ;; scan items
-  (doseq [code ["044800001447" "044800001447" "041220796076"]]
-    (carts/add-cpg-item code user-id dbd)))
+(defn seed-cart [cart-name user-id dbd]
+  ;; test user exists
+  (when (user/fetch dbd user-id)
+    (let [seed-data (yaml/parse-string (slurp "db/seeds.yaml"))]
+      ;; test cart-name exists
+      (when-let [cart-data (seed-data (keyword cart-name))]
+        ;; create a new cart
+        (carts/create-cart "aircart_lab" user-id dbd)
+        ;; scan items, TODO: interract only with carts controller methods
+        (doseq [[code qt] cart-data]
+          (carts/add-item code qt user-id dbd))))))
 
 (defn link-payment-account [stripe-id user-id dbd]  
   (card/link-account dbd user-id stripe-id))
 
-(defn seed-receipts []
-  )
+; (defn seed-receipts []
+;   )

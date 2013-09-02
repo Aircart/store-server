@@ -31,8 +31,8 @@
     ;; seeding commands (unsecure)
     ;; 
 
-    (GET "/seeding/cart/:user-id" [user-id]
-      (seeds/seed-cart user-id dbd))
+    (GET "/seeding/cart/:user-id/:cart-name" [user-id cart-name]
+      (seeds/seed-cart cart-name user-id dbd))
 
     (GET "/seeding/cards/:user-id/:stripe-id" [user-id stripe-id]
       (seeds/link-payment-account stripe-id user-id dbd))

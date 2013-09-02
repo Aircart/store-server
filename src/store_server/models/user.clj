@@ -9,15 +9,13 @@
 
 (defn fetch [db-descriptor user-id]
   "fetches user map with user id"
-  ((fn [user-bytes]
-    (if-not (nil? user-bytes) (bytes-to-map user-bytes)))
-    (db/get db-descriptor (.getBytes (str "user_" user-id)))))
+  (if-let [user-bytes (db/get db-descriptor (.getBytes (str "user_" user-id)))]
+    (bytes-to-map user-bytes)))
 
 (defn fetch-id [db-descriptor facebook-token]
   "fetch user id with token"
-  ((fn [user-id]
-    (if-not (nil? user-id) (String. user-id)))
-    (db/get db-descriptor (.getBytes (str "user_token_" facebook-token)))))
+  (if-let [user-id (db/get db-descriptor (.getBytes (str "user_token_" facebook-token)))]
+    (String. user-id)))
 
 (defn save [db-descriptor facebook-fields facebook-token]
   (with-open [db-batch (db/create-write-batch db-descriptor)]

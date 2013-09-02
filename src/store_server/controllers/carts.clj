@@ -1,4 +1,5 @@
 (ns store-server.controllers.carts
+  (:use store-server.util)
   (:require [store-server.models.cart :as cart]
             [store-server.models.store :as store]
             [store-server.catalogs.local :as local]
@@ -19,33 +20,25 @@
 
 ;; separate controller for scans?
 ;; allow scanning item with given quantity?
-(defn add-cpg-item [barcode user-id dbd]
+(defn add-item [code qt user-id dbd]
   (if-let [cart-id-bytes (cart/get-cart-id-bytes dbd user-id)]
     ;; TODO: - add method to fetch item without dealing with store ns
     ;;       - separate logic so as not to deal with cart-id-bytes
     (let [cart (cart/fetch-with-cib dbd cart-id-bytes) store-space (symbol ((store/fetch (cart :store)) :ns))]
-      (if-let [item-details ((ns-resolve store-space 'get-cpg) barcode)]
-        (if (pos? (cart/update-and-write dbd cart cart-id-bytes barcode :price (item-details :price)))
+      (if-let [item-details ((ns-resolve store-space (if (plu? code) 'get-bulk 'get-cpg)) code)]
+        (if (pos? (cart/update-and-write dbd cart cart-id-bytes code :qt qt :price (item-details (if (plu? code) :price_per_gram :price))))
           { :status 204 }
           { :status 201
-            :headers { "Location" (str "/cart-items/" barcode) }
+            :headers { "Location" (str "/cart-items/" code) }
             :body    item-details })
         { :status 404 }))
     { :status 403 }))
 
+(defn add-cpg-item [barcode user-id dbd]
+  (add-item barcode 1 user-id dbd))
+
 (defn add-bulk-item [plu weight user-id dbd]
-  (if-let [cart-id-bytes (cart/get-cart-id-bytes dbd user-id)]
-    ;; TODO: - add method to fetch item without dealing with store ns
-    ;;       - separate logic so as not to deal with cart-id-bytes
-    (let [cart (cart/fetch-with-cib dbd cart-id-bytes) store-space (symbol ((store/fetch (cart :store)) :ns))]
-      (if-let [item-details ((ns-resolve store-space 'get-bulk) plu)]
-        (if (pos? (cart/update-and-write dbd cart cart-id-bytes plu :qt weight :price (item-details :price_per_gram)))
-          { :status 204 }
-          { :status 201
-            :headers { "Location" (str "/cart-items/" plu) }
-            :body    item-details })
-        { :status 404 }))
-    { :status 403 }))
+  (add-item plu weight user-id dbd))
 
 (defn change-item-quantity [code quantity user-id dbd]
   (if-let [cart-id-bytes (cart/get-cart-id-bytes dbd user-id)]

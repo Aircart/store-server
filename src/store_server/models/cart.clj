@@ -108,7 +108,7 @@
   catalog corresponding to the store-id. Uses cpg/bulk formatting."
   (let [space (symbol ((store/fetch store-id) :ns))]
     (vec (for [[k v] items]
-      (if (< 5 (.length (name k))) ; test wether plu or barcode
+      (if (plu? k) ; test wether plu or barcode
         (merge ((ns-resolve space 'get-cpg) k)
                { :barcode        (name k)
                  :quantity       (v :qt)
