@@ -18,8 +18,8 @@
 
 ;; TODO: move to util
 (defn iso-format [date]
-  ;; TODO: replace 'Z' with X for timezone format after upgrade to Java7
-  (.format (java.text.SimpleDateFormat. "yyyy-MM-dd'T'HH:mm:ss'Z'") date))
+  ;; X option requires to Java7
+  (.format (java.text.SimpleDateFormat. "yyyy-MM-dd'T'HH:mm:ssX") date))
 
 ;; create new receipt from cart and charge
 (defn create [dbd user-id cart-id total-map charge-id]
@@ -29,7 +29,7 @@
     (cart/unlink-if-current dbd user-id cart-id)
     (let [cart (cart/fetch-with-id dbd cart-id) store-id (cart :store) jtime (java.util.Date.)]
       (doto
-        (str "receipt_" store-id "_" user-id "_" ) ;<< add date
+        (str "receipt_" store-id "_" user-id "_" (iso-format jtime))
         (#(do
           ;; store new receipt
           (db/put dbd (.getBytes %) (.getBytes (pr-str ; TODO: put in serialize method
@@ -39,7 +39,7 @@
               :time      jtime })))
           ;; append to user's receipts
           (let [key-bytes (.getBytes (str "user_" user-id "_receipts")) ; make method for it (reused in fetch-user-receipts)
-                receipts  (or (-> (db/get dbd key-bytes) String. read-string) [])]
+                receipts  (or (some-> (db/get dbd key-bytes) String. read-string) [])]
             (db/put dbd key-bytes (-> (conj receipts %) pr-str .getBytes)))))))))
 
 ;; list user receipts

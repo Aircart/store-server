@@ -9,7 +9,8 @@
             [store-server.controllers.carts :as carts]
             [store-server.controllers.cards :as cards]
             [store-server.controllers.checkouts :as checkouts]
-            [store-server.controllers.receipts :as receipts]))
+            [store-server.controllers.receipts :as receipts]
+            [store-server.db.seeds :as seeds]))
 
 ;; models to add:
 ;; - models/event
@@ -26,6 +27,15 @@
 
 (defn load-with-descriptor [dbd]
   (defroutes handler
+
+    ;; seeding commands (unsecure)
+    ;; 
+
+    (GET "/seeding/cart/:user-id" [user-id]
+      (seeds/seed-cart user-id dbd))
+
+    (GET "/seeding/cards/:user-id/:stripe-id" [user-id stripe-id]
+      (seeds/link-payment-account stripe-id user-id dbd))
 
     ;; scale methods
     ;;

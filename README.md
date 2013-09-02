@@ -1,47 +1,29 @@
 # store-server
 
-FIXME: description
+This is the main program that runs the prototype store. It is a single jar that handles both HTTP and Websocket APIs. Per our architecture design, this applicaiton handles both load balancing and higher level database functionnality internally.
 
-## Installation
+## Prerequisites
 
-Download from http://example.com/FIXME.
-
-## Usage
-
-FIXME: explanation
-
-    $ java -jar store-server-0.1.0-standalone.jar [args]
-
-## Amazon test instance
-
-    http://
+Java 7, block-level disk access.
 
 ## Devices API Documentation
 
 For API doc, go to: <http://docs.aircart.apiary.io/>
 
+## Seeding Web Commands
+
+```
+GET /seeding/cart/[user-id]
+```
+This will seed a cart with random items from aircart_lab.
+
+```
+GET /seeding/cards/[user-id]/[stripe-id]
+```
+This will give this user all the credit cards in the given Stripe customer ID.
+
+
 ## Image Processing
 
-To process images, use an image proxy, we will have our own setup soon, use this for now: <http://images.weserv.nl/>
-
-## Options
-
-FIXME: listing of options this app accepts.
-
-## Examples
-
-...
-
-### Bugs
-
-...
-
-### Any Other Sections
-### That You Think
-### Might be Useful
-
-## License
-
-Copyright © 2013 FIXME
-
-Distributed under the Eclipse Public License, the same as Clojure.
+To process images, an image proxy should be used: <http://images.weserv.nl/>
+We will have our own setup in the future.

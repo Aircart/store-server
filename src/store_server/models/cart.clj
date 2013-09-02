@@ -75,7 +75,7 @@
   ;; TODO: make transactional
   (let [kcode (keyword code)]
     (doto
-      (or (-> cart :items kcode :qt) 0) ; % previous quantity
+      (or (some-> cart :items kcode :qt) 0) ; % previous quantity
       (#(when (if reset? (not= % qt) (not= 0 qt)) ; ensure there is something to change
         (db/put dbd cart-id-bytes
           (.getBytes (pr-str

@@ -94,8 +94,10 @@
   This will get the cart-id from the open channel, and thus is still exact if
   the user starts a new cart in parallel."
   (if-let [userc (@user-channels user-id)]
-    {:status 200
-     :body (cart/select-purchases (cart/fetch-with-id dbd (userc :cart-id)))}
+    (let [cart (cart/fetch-with-id dbd (userc :cart-id))]
+      {:status 200
+       :body (cart/attach-item-details (cart :store) (cart :items))})
+     ;:body (cart/select-purchases (cart/fetch-with-id dbd (userc :cart-id)))}
     {:status 404}))
 
 ;; self-finalization -- UNIMPLEMENTED

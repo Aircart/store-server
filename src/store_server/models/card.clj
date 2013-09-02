@@ -22,6 +22,9 @@
     (if-not (nil? stripe-id-bytes)
       (String. stripe-id-bytes))))
 
+(defn link-account [dbd user-id stripe-id]
+  (db/put dbd (.getBytes (str "user_" user-id "_stripe")) (.getBytes stripe-id)))
+
 (defn create [dbd user-id params]
   "Adds a new card to a user and make it the default card.
   The default logic and list storage currrently relies on Stripe.
@@ -41,7 +44,7 @@
             (let [stripe-response (common/execute (customers/create-customer new-card (customers/email (:email user-map)) (common/description (:name user-map))))]
               (when (nil? (:error stripe-response))
                 ;; store customer id
-                (db/put dbd (.getBytes (str "user_" user-id "_stripe")) (.getBytes (:id stripe-response)))
+                (link-account dbd user-id (:id stripe-response))
                 ;; return stripe card id
                 (:id (((stripe-response :cards) :data) 0)))))
           ;; otherwise, just store a new card
