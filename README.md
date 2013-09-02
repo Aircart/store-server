@@ -15,15 +15,16 @@ For API doc, go to: <http://docs.aircart.apiary.io/>
 ```
 GET /seeding/cart/[user-id]
 ```
-This will seed a cart with random items from aircart_lab.
+This will seed a cart with random items from `aircart_lab`.
 
 ```
 GET /seeding/cards/[user-id]/[stripe-id]
 ```
-This will give this user all the credit cards in the given Stripe customer ID.
+This will give this user all the credit cards associated with the given Stripe customer ID.
 
 
 ## Image Processing
 
 To process images, an image proxy should be used: <http://images.weserv.nl/>
+
 We will have our own setup in the future.
