@@ -13,7 +13,7 @@ For API doc, go to: <http://docs.aircart.apiary.io/>
 ## Seeding Web Commands
 
 ```
-wget /seeding/cart/[user-id]/[cart-name]
+wget http(s)://host:port/seeding/cart/[user-id]/[cart-name]
 ```
 This will seed the given cart-name to user-id. Example:
 ```
@@ -22,11 +22,11 @@ wget http://tariks-macbook-air.local:8080/seeding/cart/1031864300/web
 will give Joe the same cart as on Aircart's homepage.
 
 ```
-wget /seeding/cards/[user-id]/[stripe-id]
+wget http(s)://host:port/seeding/cards/[user-id]/[stripe-id]
 ```
 This will give this user all the credit cards associated with the given Stripe customer ID. Example:
 ```
-http://tariks-macbook-air.local:8080/seeding/cards/1031864300/cus_2HF3vQgQKy5aIo
+wget http://tariks-macbook-air.local:8080/seeding/cards/1031864300/cus_2HF3vQgQKy5aIo
 ```
 will (re)connect Joe's Stripe account to his Aircart account, he will hence see all his credit cards appear again, in case the Aircart database was reset.
 
