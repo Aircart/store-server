@@ -12,6 +12,7 @@ For API doc, go to: <http://docs.aircart.apiary.io/>
 
 ## Seeding Web Commands
 
+### Seed cart
 ```
 wget http(s)://host:port/seeding/cart/[user-id]/[cart-name]
 ```
@@ -21,6 +22,7 @@ wget http://tariks-macbook-air.local:8080/seeding/cart/1031864300/web
 ```
 will give Joe the same cart as on Aircart's homepage.
 
+### Seed payment cards
 ```
 wget http(s)://host:port/seeding/cards/[user-id]/[stripe-id]
 ```
