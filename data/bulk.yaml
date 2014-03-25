@@ -39,8 +39,8 @@
   image_url: http://images.aircartapp.com.s3.amazonaws.com/fruits/peach.jpg
   price_per_gram: 0.434
 '3011':
-  name: Apricots
-  image_url: http://images.aircartapp.com.s3.amazonaws.com/fruits/apricots.jpg
+  name: Red Grapes
+  image_url: http://images.aircartapp.com.s3.amazonaws.com/fruits/grapes1.jpg
   price_per_gram: 0.3465
 '3012':
   name: Pineapple
