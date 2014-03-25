@@ -2,6 +2,7 @@
   (:require [clj-yaml.core :as yaml]
             [store-server.models.user :as user]
             [store-server.controllers.carts :as carts]
+            [store-server.models.cart :as cart]
             [store-server.models.card :as card]))
 
 (defn seed-cart [cart-name user-id dbd]

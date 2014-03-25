@@ -71,7 +71,8 @@
   Returns the previous quantity.
   * Cart existence must be checked beforehand.
   * Item existence is not checked
-  * Price must be provided if it's a new item or it will be nil."
+  * Price must be provided if it's a new item or it will be nil.
+  * insert/update the item at the end of the array-map"
   ;; TODO: make transactional
   (let [kcode (keyword code)]
     (doto
