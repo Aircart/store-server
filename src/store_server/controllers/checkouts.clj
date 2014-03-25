@@ -15,6 +15,10 @@
 (defn checkpoint-subscribe [req]
   "Checkpoint method to subscribe to all incoming checkouts and open channel."
   (with-channel req channel
+    ;; close zombie checkpoint (warning: may cause race condition)
+    ;; TODO: call on-close fn vs. close, disable frivolous notifications
+    ;; how about that zombie channel closing later? callback should be disabled
+    (some-> @checkpoint-channel (close))
     ;; update atom
     (reset! checkpoint-channel channel)
     (on-close channel (fn [status status-code]
@@ -32,6 +36,7 @@
     (if-not (nil? (@user-channels user-id))
       {:status  409
        :headers {"Reason-Phrase" "You already have a checkout in progress"}}
+       ;; TODO: overwrite checkout instead?
       (let [cart-id (cart/get-current-cart-id dbd user-id) cart (cart/fetch-with-id dbd cart-id)]
         (if (empty? (-> cart :items))
           {:status  403
@@ -94,10 +99,10 @@
   This will get the cart-id from the open channel, and thus is still exact if
   the user starts a new cart in parallel."
   (if-let [userc (@user-channels user-id)]
-    (let [cart (cart/fetch-with-id dbd (userc :cart-id))]
-      {:status 200
-       :body (cart/attach-item-details (cart :store) (cart :items))})
-     ;:body (cart/select-purchases (cart/fetch-with-id dbd (userc :cart-id)))}
+    ;(let [cart (cart/fetch-with-id dbd (userc :cart-id))]
+    {:status 200
+       ;:body (cart/attach-item-details (cart :store) (cart :items))})
+     :body (cart/select-purchases (cart/fetch-with-id dbd (userc :cart-id)))}
     {:status 404}))
 
 ;; self-finalization -- UNIMPLEMENTED
