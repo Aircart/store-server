@@ -44,7 +44,7 @@ http(s)://host:port/(resize|crop)/[x]x[y]/[url]
 
 For example:
 ```
-http://localhost:8181/crop/100x100/http://i1.ytimg.com/vi/SMQK9_N0pks/maxresdefault.jpg
+http://tariks-macbook-air.local:8181/crop/100x100/http://i1.ytimg.com/vi/SMQK9_N0pks/maxresdefault.jpg
 ```
 
 Documentation: <https://github.com/beetlebugorg/mod_dims/wiki/Webservice-API>
