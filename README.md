@@ -35,6 +35,18 @@ will (re)connect Joe's Stripe account to his Aircart account, he will hence see 
 
 ## Image Processing
 
-To process images, an image proxy should be used: <http://images.weserv.nl/>
+To process images, use our shinning image proxy: 
 
-We will have our own setup in the future.
+Basic syntax:
+```
+http(s)://host:port/(resize|crop)/[x]x[y]/[url]
+```
+
+For example:
+```
+http://localhost:8181/crop/100x100/http://i1.ytimg.com/vi/SMQK9_N0pks/maxresdefault.jpg
+```
+
+Documentation: <https://github.com/beetlebugorg/mod_dims/wiki/Webservice-API>
+
+Using an external proxy should be tested to simulated loading images over 3G, like: <http://images.weserv.nl/>
