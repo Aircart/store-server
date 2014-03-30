@@ -39,14 +39,10 @@ To process images, use our shinning image proxy:
 
 Basic syntax:
 ```
-http(s)://host:port/(resize|crop)/[x]x[y]/[url]
+http://host:port/(resize|crop)/[x]x[y]/[url]
 ```
 
 For example:
 ```
-http://tariks-macbook-air.local:8181/crop/100x100/http://i1.ytimg.com/vi/SMQK9_N0pks/maxresdefault.jpg
+http://tariks-macbook-air.local:8181/resize/100x100/http://i1.ytimg.com/vi/SMQK9_N0pks/maxresdefault.jpg
 ```
-
-Documentation: <https://github.com/beetlebugorg/mod_dims/wiki/Webservice-API>
-
-Using an external proxy should be tested to simulated loading images over 3G, like: <http://images.weserv.nl/>
