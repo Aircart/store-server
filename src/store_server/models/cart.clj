@@ -81,7 +81,7 @@
         (db/put dbd cart-id-bytes
           (.getBytes (pr-str
             (if (= 0 qt)
-              (dissoc cart [:items kcode])
+              (update-in cart [:items] dissoc kcode) ; TODO: use dissoc-in when it makes it to core, ie. (dissoc-in cart [:items kcode])
               (assoc-in cart [:items kcode] { :price (if (= 0 %)
                                                 price
                                                 (-> cart :items kcode :price))
