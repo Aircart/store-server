@@ -18,7 +18,7 @@ curl http(s)://host:port/seeding/cart/[user-id]/[cart-name]
 ```
 This will seed the given cart-name to user-id. Example:
 ```
-curl http://tariks-macbook-air.local:8080/seeding/cart/1031864300/web
+curl http://tariks-air:8080/seeding/cart/1031864300/web
 ```
 will give Joe the same cart as on Aircart's homepage.
 
@@ -28,7 +28,7 @@ curl http(s)://host:port/seeding/cards/[user-id]/[stripe-id]
 ```
 This will give this user all the credit cards associated with the given Stripe customer ID. Example:
 ```
-curl http://tariks-macbook-air.local:8080/seeding/cards/1031864300/cus_2HF3vQgQKy5aIo
+curl http://tariks-air:8080/seeding/cards/1031864300/cus_2HF3vQgQKy5aIo
 ```
 will (re)connect Joe's Stripe account to his Aircart account, he will hence see all his credit cards appear again, in case the Aircart database was reset.
 
@@ -44,5 +44,5 @@ http://host:port/(resize|crop)/[x]x[y]/[url]
 
 For example:
 ```
-http://tariks-macbook-air.local:8181/resize/100x100/http://i1.ytimg.com/vi/SMQK9_N0pks/maxresdefault.jpg
+http://tariks-air:8181/resize/100x100/http://i1.ytimg.com/vi/SMQK9_N0pks/maxresdefault.jpg
 ```
