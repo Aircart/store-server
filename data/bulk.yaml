@@ -1,3 +1,15 @@
+'4001':
+  name: Tomatoes
+  image_url: http://www.paulnoll.com/Books/Clear-English/color-133-Tomato-2.jpg
+  price_per_gram: 0.4
+'4002':
+  name: Golden Delicious Apples
+  image_url: http://www.fruitezy.com.au/images/apple%20gold%20del%20lge.png
+  price_per_gram: 0.4
+'4003':
+  name: Mandarines
+  image_url: http://www.freshplaza.com/2009/sunkist.jpg
+  price_per_gram: 0.4
 '3001':
   name: Fuji Apples
   image_url: http://images.aircartapp.com.s3.amazonaws.com/fruits/apple.jpg
@@ -30,19 +42,7 @@
   name: Oranges
   image_url: http://images.aircartapp.com.s3.amazonaws.com/fruits/orange.jpg
   price_per_gram: 0.4
-'3009':
-  name: White Grapes
-  image_url: http://images.aircartapp.com.s3.amazonaws.com/fruits/grape.jpg
-  price_per_gram: 0.53
 '3010':
   name: Peaches
   image_url: http://images.aircartapp.com.s3.amazonaws.com/fruits/peach.jpg
   price_per_gram: 0.434
-'3011':
-  name: Red Grapes
-  image_url: http://images.aircartapp.com.s3.amazonaws.com/fruits/grapes1.jpg
-  price_per_gram: 0.3465
-'3012':
-  name: Pineapple
-  image_url: http://images.aircartapp.com.s3.amazonaws.com/fruits/pineapple.jpg
-  price_per_gram: 0.645

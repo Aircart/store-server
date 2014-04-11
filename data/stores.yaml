@@ -1,6 +1,6 @@
 aircart_lab:
   name: Aircart Labs
-  tax_rate: 8.25
+  tax_rate: 8.875
   ns: store-server.catalogs.local
 factual:
   name: Factual API Data
