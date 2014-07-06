@@ -9,7 +9,7 @@
   [& args]
 
   (println "Opening LevelDB file in db/main")
-  (let [main-db (db/open "db/main")]
+  (let [main-db (db/open (System/getenv "AIRCART_DB"))]
 
     (println "Running server on port 8080")
     (run-server (web/load-with-descriptor main-db) {:port 8080})))
