@@ -1,0 +1,423 @@
+HOST: http://www.google.com/
+
+--- Aircart devices API ---
+---
+All comments can be written in (support [Markdown](http://daringfireball.net/projects/markdown/syntax) syntax)
+
+All prices are given in CENTS.
+
+Times are formatted using the ISO 8601 standard.
+---
+
+--
+Scale methods
+--
+List products priced to the weight
+GET /scale-products
+< 200
+< Content-Type: application/json
+[
+    {
+        "name": "Pasta",
+        "image_url": "http://example.com/image.jpg",
+        "plu": 3001,
+        "price_per_gram": 1.25
+    },
+    ...
+]
+
+--
+Store selection
+--
+Get details for a store.
+GET /stores/[store_id]
+< 200
+< Content-Type: application/json
+{
+    "name": "Aircart Test Store",
+    "tax_rate": 8.25
+}
++++++
+< 404
+
+--
+User authentication
+--
+PUT /users/[facebook_user_id]
+> Content-Type: application/json
+{
+  "facebook_access_token": "xyz",
+  "location": [-93.7353858, 41.5998115, 0]
+}
+< 200
++++++
+< 201
++++++
+< 401
++++++
+< 503
+
+--
+Cart actions
+--
+Create a new cart and discard the last used cart, if any.
+POST /carts
+> Content-Type: application/json
+{
+    "store_id": "factual_api",
+    "location": [-93.7353858, 41.5998115, 0]
+}
+< 201
++++++
+< 404
+
+Get the list of items in the current cart.
+GET /cart
+< 200
+< Content-Type: application/json
+{
+    "store_id": "aircart_lab",
+    "items":
+    [
+        {
+            "barcode": "078742115238",
+            "name": "Pasta",
+            "image_url": "http://example.com/image.jpg",
+            "price": 500,
+            "quantity": 2
+        },
+        {
+            "plu": "3000",
+            "name": "Pasta",
+            "image_url": "http://example.com/image.jpg",
+            "price_per_gram": 0.134,
+            "weight": 452.2356
+        },
+        ...
+    ]
+}
++++++
+< 404
+
+
+Register a scan event, record it as a cart item for the current cart and return product information.
+POST /scans
+> Content-Type: application/json
+{
+    "barcode": "078742115238",
+    "location": [-93.7353858, 41.5998115, 0]
+}
+< 201
+< Location: /cart-items/[id]
+< Content-Type: application/json
+{
+    "name": "Pasta",
+    "image_url": "http://example.com/image.jpg",
+    "price": 500
+}
++++++
+< 204
++++++
+< 404
++++++
+< 403
+
+
+Register a scan event, record it as a cart item for the current cart and return product information -- for scale QR scan.
+POST /scale-scans
+> Content-Type: application/json
+{
+    "plu": "4000",
+    "scale_id": "zero",
+    "weight": 452.2356
+}
+< 201
+< Location: /cart-items/[id]
+< Content-Type: application/json
+{
+    "name": "Pasta",
+    "image_url": "http://example.com/image.jpg",
+    "price_per_gram": 0.134
+}
++++++
+< 204
++++++
+< 404
++++++
+< 403
+
+
+
+Removing an item from the cart
+DELETE /cart-items/[id]
+> Content-Type: application/json
+{
+    "location": [-93.7353858, 41.5998115, 0]
+}
+< 204
++++++
+< 404
++++++
+< 403
+
+
+Changing the quantity of an item
+PUT /cart-items/[id]
+> Content-Type: application/json
+{
+    "quantity": 2,
+    "location": [-93.7353858, 41.5998115, 0]
+}
+< 204
++++++
+< 404
++++++
+< 403
+
+
+-- Payment Cards --
+Adds a new card for the authenticated user
+POST /cards
+> Content-Type: application/json
+{
+    "number": "1234567890000000",
+    "exp_month": 1,
+    "exp_year": 2013,
+    "cvc": "123",
+    "name": "Joe Bidule",
+    "address_zip": "91789"
+}
+< 201
+< Location: /cards/[id]
++++++
+< 402
++++++
+< 503
+
+
+Removes card
+
+If this is the default card, the last added card becomes the new default card.
+DELETE /cards/[card_id]
+< 200
++++++
+< 404
++++++
+< 503
+
+
+Set default card
+PUT /default-card
+> Content-Type: application/json
+{
+    "id": "cc_08UWVODDnJOLcQ"
+}
+< 200
++++++
+< 404
++++++
+< 503
+
+
+List all cards
+GET /cards
+< 200
+< Content-Type: application/json
+{
+    "default_card_id": "cc_08UWVODDnJOLcQ",
+    "cards":
+    [
+        {
+            "id": "cc_08UWVODDnJOLcQ",
+            "last4": "1234",
+            "type": "Visa",
+            "exp_month": 1,
+            "exp_year": 2013,
+            "name": "Joe Bidule",
+            "address_zip": "91789"
+        },
+        ...
+    ]
+}
++++++
+< 204
++++++
+< 503
+
+
+-- User Checkout --
+Unimplemented
+(will possibly be the initiation of the websocket)
+POST /invoices
+< 200
+
+
+Checkout current cart and open a websocket to the server, if additional steps are required.
+A websocket redirection means the paymnent card was successfully pre-authorized, and the checkout event was sent to the checkpoint.
+(Parameters for the payment card and invoice id will later be added.)
+GET /receipts/create (websocket)
+> Authorization: Token token="XXXXX"
+< 201
+< Location: /receipts/[receipt_id]
+(not implemented yet)
++++++
+< 101
+(RX) receipt: /receipts/[receipt_id]
+(RX) [closed: 1000]        -- checkout successfully completed at checkpoint
+--
+(RX) [closed: 1001]        -- checkout aborted by checkpoint
+(TX) [closed: 1001]        -- checkout aborted by user/phone
++++++
+< 503
+< Reason-Phrase: The checkpoint is not online
++++++
+< 409
+< Reason-Phrase: You already have a checkout in progress
++++++
+< 403
+< Reason-Phrase: You don't have a cart or your cart is empty
++++++
+< 502
+< Reason-Phrase: Payment Gateway Error
++++++
+< 402
+< Reason-Phrase: <Human-readable card error message>
+
+
+Get the receipts for the current user.
+GET /receipts
+> Authorization: Token token="XXXXX"
+< 200
+< Content-Type: application/json
+[
+    {
+        "id": "receipt_id",
+        "time": "2013-02-21T19:49:44Z",
+        "store_id": "store_id",
+        "item_count": 12,
+        "subtotal": 35.12,
+        "tax_rate": 5.74,
+        "total": 40.21
+    },
+    ...
+]
+
+
+Get a particular receipt.
+GET /receipts/[receipt_id]
+> Authorization: Token token="XXXXX"
+< 404
++++++
+< 200
+< Content-Type: application/json
+{
+    "id": "receipt_id",
+    "time": "2013-02-21T19:49:44Z",
+    "store_id": "store_id",
+    "item_count": 12,
+    "subtotal": 35.12,
+    "cart_items": [
+        {
+            "barcode": "078742115238",
+            "name": "Pasta",
+            "image_url": "http://example.com/image.jpg",
+            "price": 500,
+            "quantity": 2
+        },
+        {
+            "plu": "3000",
+            "name": "Pasta",
+            "image_url": "http://example.com/image.jpg",
+            "price_per_gram": 0.134,
+            "weight": 452.2356
+        },
+        ...
+    ],
+    "tax_rate": 5.74,
+    "total": 40.21,
+    "card": {
+        "id": "cc_08UWVODDnJOLcQ",
+        "last4": "1234",
+        "type": "Visa",
+        "exp_month": 1,
+        "exp_year": 2013,
+        "name": "Joe Bidule",
+        "address_zip": "91789"
+    }
+}
+
+
+-- Checkpoint methods --
+Opens a websocket to receive incoming checkouts.
+GET /checkouts (websocket)
+< 101
+(RX) user_id: open  -- new incoming checkout by user_id
+(RX) user_id: close -- checkout complete or aborted
+
+
+Get the details of a given user
+GET /users/[user_id]
+< 200
+< Content-Type: application/json
+{
+    "first_name": "Joe",
+    "picture_url": "http://example.com/pic.png"
+}
++++++
+< 404
+
+
+Abort a user's current checkout
+DELETE /checkouts/[user_id]
+< 204
++++++
+< 404
+
+
+Complete a checkout. This will charge the user's card.
+A websocket redirection means one ore more verifications are required (verification/websocket redirection not implemented yet).
+GET /checkouts/[user_id]/finalize (websocket)
+< 204
++++++
+< 101
+(not implemented yet)
+--
+(RX) verify: cart   -- received immediatly, if required
+(TX) pass           -- verification successful
+(TX) [closed: 4001] -- verification failed
+--
+(RX) verify: age 18 -- received immediatly after, if required
+(TX) pass           -- verification successful
+(TX) [closed: 4001] -- verification failed
+--
+(TX) [closed: 1001] -- checkout aborted at checkpoint during verification
+(RX) [closed: 1001] -- checkout aborted by user
+(RX) [closed: 1000] -- checkout complete (after pass), no more verifications (same as HTTP 204)
+(RX) [closed: 1011] -- unexpected issue while trying to capture charge (same as HTTP 500)
++++++
+< 404
++++++
+< 500
+
+
+Get the listing of a cart that is being checked-out.
+GET /purchases/[user_id]
+< 200
+< Content-Type: application/json
+[
+    {
+        "barcode": "078742115238",
+        "name": "Pasta",
+        "image_url": "http://example.com/image.jpg",
+        "quantity": 2
+    },
+    {
+        "plu": "3000",
+        "name": "Pasta",
+        "image_url": "http://example.com/image.jpg",
+        "weight": 452.2356
+    },
+    ...
+]
++++++
+< 404

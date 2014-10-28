@@ -218,3 +218,19 @@
   name: Diamond toothpicks
   image_url: http://images.aircartapp.com.s3.amazonaws.com/cpg/toothpick.jpg
   price: 1.99
+'01312403':
+  name: Heinz Tomato Ketchup
+  image_url: http://141plus.files.wordpress.com/2011/07/upside-down-ketchup.jpeg
+  price: 259
+'014054064093':
+  name: Odwalla Superfood
+  image_url: http://i.walmartimages.com/i/p/00/01/40/54/06/0001405406409_500X500.jpg
+  price: 300
+'876063002011':
+  name: Muslce Milk Chocolate
+  image_url: http://www.gnc.com/graphics/product_images/pGNC1-5741579dt.jpg
+  price: 400
+'073296153309':
+  name: Real Mayonnaise
+  image_url: http://www.mydiscountcoupon.com/blog/wp-content/uploads/2014/07/KRAFT-Mayonnaise.jpg
+  price: 199
