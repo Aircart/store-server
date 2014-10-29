@@ -8,11 +8,14 @@
   "Runs the Aircart store server."
   [& args]
 
-  (println "Opening LevelDB file in db/main")
-  (let [main-db (db/open (System/getenv "AIRCART_DB"))]
+  (let [db-path (System/getenv "AIRCART_DB")]
+    
+    (println (str "Opening LevelDB file in " db-path))
+    (let [main-db (db/open db-path)]
 
-    (println "Running server on port 8080")
-    (run-server (web/load-with-descriptor main-db) {:port 8080})))
+      (println "Running server on port 8080")
+      (run-server (web/load-with-descriptor main-db) {:port 8080}))))
+  
 
 ;; TODO: add Runtime.getRuntime().addShutdownHook to close db file
 ;;       use atom/promise to pass db-descriptor around?

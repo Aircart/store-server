@@ -2,9 +2,22 @@
 
 This is the main program that runs the prototype store. It is a single jar that handles both HTTP and Websocket APIs. Per our architecture design, this applicaiton handles both load balancing and higher level database functionnality internally.
 
-## Prerequisites
+## How to build
 
-Java 7, block-level disk access.
+You need Java 7 and leiningen on your machine to make the jar.
+
+```
+lein uberjar
+docker build -t store-server .
+```
+
+## How to run
+
+Add `-p 8080:8080` if you want to test the api over an unsecure connection, otherwise use with [ssl-proxy](https://github.com/Aircart/ssl-proxy).
+
+```
+docker run --name api store-server
+```
 
 ## Devices API Documentation
 
@@ -31,18 +44,3 @@ This will give this user all the credit cards associated with the given Stripe c
 curl http://tariks-air:8080/seeding/cards/1031864300/cus_2HF3vQgQKy5aIo
 ```
 will (re)connect Joe's Stripe account to his Aircart account, he will hence see all his credit cards appear again, in case the Aircart database was reset.
-
-
-## Image Processing
-
-To process images, use our shinning image proxy: 
-
-Basic syntax:
-```
-http://host:port/(resize|crop)/[x]x[y]/[url]
-```
-
-For example:
-```
-http://tariks-air:8181/resize/100x100/http://i1.ytimg.com/vi/SMQK9_N0pks/maxresdefault.jpg
-```
