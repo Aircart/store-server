@@ -8,7 +8,7 @@
 (defn seed-cart [cart-name user-id dbd]
   ;; test user exists
   (when (user/fetch dbd user-id)
-    (let [seed-data (yaml/parse-string (slurp "db/seeds.yaml"))]
+    (let [seed-data (yaml/parse-string (slurp "data/seeds.yaml"))]
       ;; test cart-name exists
       (when-let [cart-data (seed-data (keyword cart-name))]
         ;; create a new cart
