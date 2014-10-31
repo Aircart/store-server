@@ -8,7 +8,7 @@ You need Java 7 and leiningen on your machine to make the jar.
 
 ```
 lein uberjar
-docker build -t store-server .
+docker build -t aircart/store-server .
 ```
 
 ## How to run
@@ -16,7 +16,7 @@ docker build -t store-server .
 Add `-p 8080:8080` if you want to test the api over an unsecure connection, otherwise use with [ssl-proxy](https://github.com/Aircart/ssl-proxy).
 
 ```
-docker run --name api store-server
+docker run --name api aircart/store-server
 ```
 
 ## Devices API Documentation
